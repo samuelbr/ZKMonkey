@@ -14,7 +14,9 @@ define(function(require) {
             toucher:    require('./species/toucher'),
             formFiller: require('./species/formFiller'),
             scroller:   require('./species/scroller'),
-            typer:      require('./species/typer')
+            typer:      require('./species/typer'),
+            zkclicker:  require('./species/zkclicker'),
+            zkformFiller: require('./species/zkformFiller')
         },
         mogwais: {
             alert:      require('./mogwais/alert'),
