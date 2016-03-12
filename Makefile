@@ -1,5 +1,5 @@
 watch:
-	./node_modules/webpack-dev-server/bin/webpack-dev-server.js --colors --progress --host=0.0.0.0
+	./node_modules/webpack-dev-server/bin/webpack-dev-server.js --colors --progress --https --host=0.0.0.0
 
 setup:
 	npm install
