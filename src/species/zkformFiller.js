@@ -236,7 +236,10 @@ define(function(require) {
             
             //get method
             var method = correctFillers[correctId];
-            console.log('Correct by ', method, element);
+            
+            if (config.logger && typeof config.logger.log == 'function') {
+                config.logger.log('gremlin', 'zkformFiller', 'correct by ', method, 'in', element);
+            }
             applyFiller(method, element[0]);
             return true;
         }
