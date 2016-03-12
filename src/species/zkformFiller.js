@@ -19,10 +19,69 @@ define(function(require) {
             'input[type="password"]:not([readonly="readonly"])': fillTextElement,
             'input[type="number"]:not([readonly="readonly"])': fillNumberElement,
             'select:not([readonly="readonly"])': fillSelect,
-            'input[type="radio"]:not([readonly="readonly"])': fillRadio,
-            'input[type="checkbox"]:not([readonly="readonly"])': fillCheckbox,
+            'input[type="radio"]:not([readonly="readonly"])': fillByClick,
+            'input[type="checkbox"]:not([readonly="readonly"])': fillByClick,
             'input[type="email"]:not([readonly="readonly"])': fillEmail,
             'input:not([type])': fillTextElement
+        };
+        
+        var defaultFillers = {
+            'empty': function(e) {
+                e.value = '';
+                return 'EMPTY';
+            },
+            'append-char': function(e) {
+                var character = config.randomizer.character();
+                e.value += character;
+                return 'append '+character;
+            },
+            'append-number': function(e) {
+                var number = config.randomizer.character({pool: '0123456789'});
+                e.value += number;
+                return 'append '+number;
+            },
+            'char': function(e) {
+                var character = config.randomizer.character();
+                e.value = character;
+                return character;
+            },
+            'number': function(e) {
+                var number = config.randomizer.natural();
+                e.value = number;
+                return number;
+            },
+            'smaller-number': function(e) {
+                var number = config.randomizer.natural({max:65536});
+                e.value = number;
+                return number;
+            },            
+            'word': function(e) {
+                var word = config.randomizer.word();
+                e.value = word;
+                return word;
+            },
+            'sentence': function(e) {
+                var sentence = config.randomizer.sentence();
+                e.value = sentence;
+                return sentence;
+            },
+            'paragraph': function(e) {
+                var paragraph = config.randomizer.paragraph();
+                e.value = paragraph;
+                return paragraph;
+            },
+            'email': function(e) {
+                var email = config.randomizer.email();
+                e.value = email;
+                return email;
+            },
+            'default': function(e) {
+                if ($(e).data('zkformFiller-checked')) {
+                    var value = $(e).data('zkformFiller-defaultData');
+                    e.value = value;
+                    return value;
+                }
+            }
         };
 
         function defaultCanFillElement() {
@@ -51,7 +110,8 @@ define(function(require) {
 
         function defaultInvalidElemenentsSelector() {
             var roots = config.rootsSelector();
-            return roots.find(config.invalidQuery);
+            var keys = Object.keys(config.correctFillers);
+            return roots.find(keys.join(','));
         }
         
         /**
@@ -72,8 +132,13 @@ define(function(require) {
             resetRatio:      10,
             allowCorrect:    true,
             correctInterval: 1000,
-            invalidQuery:    '.z-intbox-invalid, .z-doublebox-invalid, .z-spinner-invalid,.z-textbox-invalid',
-            correctMethods:  ['word','email','number','dafault','empty']
+            correctFillers:  {
+                '.z-textbox-invalid':                                        ['word','email','number','smaller-number','default','empty'],
+                '.z-intbox-invalid,.z-doublebox-invalid,.z-spinner-invalid': ['number','smaller-number','default','empty'],
+                '.z-datebox-invalid':                                        ['empty','default']},
+            
+            textFillers:     [['append-char','empty','number','smaller-number','word','sentence','email','char'],[10,5,2,3,10,10,5,5]],
+            numberFillers:   [['append-number','empty','number','smaller-number'],[5,2,2,3]]
             
         };
 
@@ -85,8 +150,8 @@ define(function(require) {
                 throw new RandomizerRequiredException();
             }
             
-            if (config.allowCorrect) {
-                tryCorrectElement();
+            if (config.allowCorrect && tryCorrectElement()) {
+                return true;
             }
             
             var element, nbTries = 0;
@@ -111,7 +176,7 @@ define(function(require) {
             // Retrieve element type
             var elementType = null;
             for (var selector in config.elementMapTypes) {
-                if (matchesSelector(element, selector)) {
+                if ($(element).is(selector)) {
                     elementType = selector;
                     break;
                 }
@@ -126,7 +191,7 @@ define(function(require) {
             }
 
             if (config.logger && typeof config.logger.log == 'function') {
-                config.logger.log('gremlin', 'formFiller', 'input', value, 'in', element);
+                config.logger.log('gremlin', 'zkformFiller', 'input', value, 'in', element);
             }
         }
         
@@ -147,28 +212,39 @@ define(function(require) {
             
             element = $(config.randomizer.pick(elements));
             element.data('zkformFiller-correctTime', now);
-            var correctId = element.data('zkformFiller-correctId') || -1;
-            correctId++;
+            
+            var correctFillers;
+            for (var k in config.correctFillers) {
+                if (element.is(k)) {
+                    correctFillers = config.correctFillers[k];
+                    break;
+                }
+            }
+            
+            //get correct method
+            var correctId = element.data('zkformFiller-correctId');
+            if (correctId >= 0) {
+                correctId++;
+            } else {
+                correctId = 0;
+            }
+            
+            if (correctId >= correctFillers.length) {
+                correctId = 0;
+            }
+            element.data('zkformFiller-correctId', correctId);
             
             //get method
-            
-            
-            console.log('Correct', element, correctId);
+            var method = correctFillers[correctId];
+            console.log('Correct by ', method, element);
+            applyFiller(method, element[0]);
+            return true;
         }
 
         function fillTextElement(element) {
-        
             initMetadata(element);
 
-            if ($(element).hasClass('z-intbox')) {
-                return fillNumberElement(element);
-            }
-
-            if ($(element).hasClass('z-doublebox')) {
-                return fillNumberElement(element);
-            }
-
-            if ($(element).hasClass('z-spinner-input')) {
+            if ($(element).is('.z-intbox,.z-doublebox,.z-spinner-input')) {
                 return fillNumberElement(element);
             }
             
@@ -188,22 +264,8 @@ define(function(require) {
         }
         
         function fillSimpleTextElement(element) {
-            var character;
-            if (!fixTextElement(element)) {
-                character = config.randomizer.character();
-                element.value += character;
-            }
-            
-            if (config.randomizer.bool({likelihood: config.resetRatio})) {
-                element.value = "";
-                character = "EMPTY";
-            }
-            
-            
-            $(element).trigger('keyup');
-            $(element).trigger('blur');
-            
-            return character;        
+            var filler = config.randomizer.weighted(config.textFillers[0], config.textFillers[1]);
+            return applyFiller(filler, element);
         }
         
         function fillCombobox(element) {
@@ -268,27 +330,8 @@ define(function(require) {
         }        
         
         function fillNumberElement(element) {
-            if (!fixTextElement(element)) {
-                var number = config.randomizer.character({pool: '0123456789'});
-                element.value += number;
-            }
-
-            if (config.randomizer.bool({likelihood: config.resetRatio})) {
-                element.value = "";
-                character = "EMPTY";
-            }            
-            
-            $(element).trigger('keyup');
-            $(element).trigger('blur');
-            
-            return number;
-        }
-        
-        function fixTextElement(element) {
-            if (!$(element).is('.z-intbox-invalid, .z-doublebox-invalid, .z-spinner-invalid,.z-textbox-invalid')) {
-                return false;
-            }
-            return restoreToDefaultValue(element);
+            var filler = config.randomizer.weighted(config.numberFillers[0], config.numberFillers[1]);
+            return applyFiller(filler, element);
         }
 
         function fillSelect(element) {
@@ -304,16 +347,7 @@ define(function(require) {
             return randomOption.value;
         }
 
-        function fillRadio(element) {
-            // using mouse events to trigger listeners
-            var evt = document.createEvent("MouseEvents");
-            evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-            element.dispatchEvent(evt);
-
-            return element.value;
-        }
-
-        function fillCheckbox(element) {
+        function fillByClick(element) {
             // using mouse events to trigger listeners
             var evt = document.createEvent("MouseEvents");
             evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
@@ -323,33 +357,7 @@ define(function(require) {
         }
 
         function fillEmail(element) {
-            var email = config.randomizer.email();
-            element.value = email;
-
-            return email;
-        }
-
-        function matchesSelector(el, selector) {
-            if (el.webkitMatchesSelector) {
-                matchesSelector = function(el, selector) {
-                    return el.webkitMatchesSelector(selector);
-                };
-            } else if (el.mozMatchesSelector) {
-                matchesSelector = function(el, selector) {
-                    return el.mozMatchesSelector(selector);
-                };
-            } else if (el.msMatchesSelector) {
-                matchesSelector = function(el, selector) {
-                    return el.msMatchesSelector(selector);
-                };
-            } else if (el.oMatchesSelector) {
-                matchesSelector = function(el, selector) {
-                    return el.oMatchesSelector(selector);
-                };
-            } else {
-                throw new Error('Unsupported browser');
-            }
-            return matchesSelector(el, selector);
+            return defaultFillers['email'](element);
         }
         
         function getElementClickPoint(element) {
@@ -381,6 +389,13 @@ define(function(require) {
             }
             
             return false;
+        }
+        
+        function applyFiller(fillerName, element) {
+            var ret = defaultFillers[fillerName](element);
+            $(element).trigger('keyup').trigger('blur');
+            
+            return ret;
         }
 
         configurable(zkformFillerGremlin, config);
