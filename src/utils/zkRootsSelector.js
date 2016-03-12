@@ -26,11 +26,6 @@ define(function(require) {
         var query = '.z-window-modal:visible, .z-messagebox-window:visible, .z-page:visible, .z-window:visible, .z-popup:visible';
         var wnds = $(query);
         wnds = pickTop(wnds);
-        /*
-        wnds.each(function(idx, e) {
-            UIEffects.rect(e);
-        });
-        */
         return wnds;
     }
 });
