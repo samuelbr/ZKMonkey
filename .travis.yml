@@ -9,7 +9,5 @@ env:
     NODE_ENV=production
 install:
   - npm install -g webpack
-  - npm install -g eslint
 script:
-  - npm run lint:travis
-  - npm run test
+  - npm run build
