@@ -4,11 +4,9 @@ node_js:
 branches:
   only:
     - devel
-  
 env:
   global:
     NODE_ENV=production
-
 script:
-  - node node_modules/webpack/bin/webpack -p
+  - node node_modules/webpack/bin/webpack.js -p
 

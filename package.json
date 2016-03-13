@@ -1,32 +1,33 @@
 {
-  "name": "gremlins.js",
-  "version": "0.1.0",
-  "description": "A monkey testing library written in JavaScript, for Node.js and the browser. Use it to check the robustness of web applications by unleashing a horde of undisciplined gremlins.",
-  "main": "gremlins.min.js",
+  "name": "zkmonkey.js",
+  "version": "1.0.0",
+  "description": "A ZK monkey testing library written in JavaScript, for Node.js and the browser.",
+  "main": "zkmonkey.min.js",
   "directories": {
     "example": "examples"
   },
   "scripts": {
-    "test": "make test"
+    "test": "make test",
+    "start": "node ./node_modules/webpack/bin/webpack.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/marmelab/gremlins.js.git"
+    "url": "git://github.com/samuelbr/ZKMonkey.git"
   },
   "keywords": [
     "monkey",
     "test",
     "testing",
     "stress",
-    "gremlin"
+    "ZK"
   ],
-  "author": "Francois Zaninotto",
+  "author": "Samuel Brezani",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/marmelab/gremlins.js/issues"
+    "url": "https://github.com/samuelbr/ZKMonkey/issues"
   },
   "devDependencies": {
-    "webpack": "^1.8.11",
-    "webpack-dev-server": "^1.8.2"
+    "webpack": "^1.12.9",
+    "webpack-dev-server": "^1.14.0"
   }
 }
