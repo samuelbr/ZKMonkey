@@ -4,13 +4,11 @@ node_js:
 branches:
   only:
     - devel
-before_script:
-  - npm install
   
 env:
   global:
     NODE_ENV=production
 
 script:
-  - ./node_modules/webpack/bin/webpack.js -p
+  - node node_modules/webpack/bin/webpack -p
 
