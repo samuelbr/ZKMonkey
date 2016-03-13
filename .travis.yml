@@ -7,6 +7,9 @@ branches:
 env:
   global:
     NODE_ENV=production
-    
-script: node_modules/webpack/bin/webpack.js -p
-
+install:
+  - npm install -g webpack
+  - npm install -g eslint
+script:
+  - npm run lint:travis
+  - npm run test
