@@ -8,6 +8,5 @@ env:
   global:
     NODE_ENV=production
     
-script:
-  -  node node_modules/webpack/bin/webpack.js -p
+script: node_modules/webpack/bin/webpack.js -p
 
