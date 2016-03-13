@@ -9,7 +9,7 @@ module.exports = {
         gremlins: sources
     },
     output: {
-        filename: "gremlins.min.js",
+        filename: "zkmonkey.min.js",
         publicPath: "https://nw-docker:10343/",
         libraryTarget: "umd"
     }
